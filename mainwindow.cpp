@@ -20,6 +20,7 @@ MainWindow::MainWindow(QWidget *parent)
     ui->splitter->restoreState(mSettings->value("splitter").toByteArray());
 
     ui->edtProgramDir->setText( mSettings->value("QEmuProgramDir").toString() );
+    ui->edtStoreDir->setText( mSettings->value("QEmuStoreDir").toString() );
 
     if ( ! mSettings->value("stylsheet").toByteArray().isEmpty() ) {
 
@@ -31,14 +32,13 @@ MainWindow::MainWindow(QWidget *parent)
         f.close();
     }
 
-    this->fillCboSystems();
-    this->fillCboConfigName();
-
     mProcess = new QProcess(this);
     connect (mProcess, SIGNAL(readyReadStandardOutput()), this, SLOT(processOutput()));
     connect (mProcess, SIGNAL(readyReadStandardError()), this, SLOT(processError()));
 
     this->createActions();
+    this->fillCboSystems();
+    this->fillCboConfigName();
 }
 
 void MainWindow::closeEvent(QCloseEvent *event)
@@ -178,31 +178,18 @@ void MainWindow::fillCboSystems()
 {
     ui->cboSystems->clear();
 
-    QDir dir(ui->edtProgramDir->text());
+    if ( ! ui->edtProgramDir->text().isEmpty() ) {
 
-    for (const QString &filename : dir.entryList(QStringList() << "*system*", QDir::Files))
-        ui->cboSystems->addItem(filename);
-}
+        QDir dir(ui->edtProgramDir->text());
 
-void MainWindow::on_cmdStart_clicked()
-{
-    QStringList para ;
+        for (const QString &filename : dir.entryList(QStringList() << "*system*", QDir::Files)) {
+            ui->cboSystems->addItem(filename);
+        }
 
-    ui->edtOutput->clear();
-    ui->edtError->clear();
+    } else {
 
-    para << ui->edtSystemParam->text().split(" ")
-         << ui->edtDiskParam->text().split(" ")
-         << ui->edtCdromParam->text().split(" ")
-         << ui->edtFloppyParam->text().split(" ");
-
-    qDebug() << ui->edtProgramDir->text() + "/" + ui->cboSystems->currentText();
-
-    para.removeAll("");
-
-    qDebug() << para;
-
-    mProcess->start(ui->edtProgramDir->text() + "/" + ui->cboSystems->currentText(), para);
+        QMessageBox::information(this, "Information", "QEMU programs not found...\n\nPlease set the directory in settings!");
+    }
 }
 
 void MainWindow::buildSystemParameter() {
@@ -262,8 +249,8 @@ void MainWindow::buildSystemParameter() {
     if ( !ui->edtCpuProp->text().isEmpty() )
         para = para + "," + ui->edtCpuProp->text();
 
-    if ( !ui->edtSystemName->text().isEmpty() )
-        para = para + " -system " + ui->edtSystemName->text();
+    if ( !ui->edtMachineName->text().isEmpty() )
+        para = para + " -machine " + ui->edtMachineName->text();
 
     if ( !ui->edtExtra->text().isEmpty() )
         para = para + " " + ui->edtExtra->text();
@@ -325,12 +312,10 @@ void MainWindow::buildFloppyParameter() {
 
 void MainWindow::on_tbuCreateImageFileName_clicked()
 {
-    QString selFilter="All files (*.*)";
-    QString fileName = QFileDialog::getSaveFileName(this,"Save file",QDir::currentPath(),
-                                 "Text files (*.txt);;All files (*.*)",&selFilter);
+    QString fileName = QFileDialog::getSaveFileName(this,"Save image file", ui->edtStoreDir->text());
 
     if ( ! fileName.isEmpty() ) {
-        ui->edtCreateImageFileName->setText (fileName);
+        ui->edtCreateImageFileName->setText (fileName + "." + ui->cboCreateImageFormat->currentText());
     }
 }
 
@@ -474,6 +459,7 @@ void MainWindow::on_actionSave_triggered()
     mSettings->setValue("MemSize", ui->edtMemSize->text() );
     mSettings->setValue("Bootmenu", ui->chkBootmenu->isChecked() );
     mSettings->setValue("Accel", ui->cboAccel->currentText() );
+    mSettings->setValue("AccelProp", ui->edtAccelProp->text() );
     mSettings->setValue("Language", ui->cboLanguage->currentText() );
 
     mSettings->setValue("CPUs", ui->edtSMPCpus->text() );
@@ -489,7 +475,7 @@ void MainWindow::on_actionSave_triggered()
 
     mSettings->setValue("CpuModel", ui->edtCpuModel->text() );
     mSettings->setValue("CpuModelProp", ui->edtCpuProp->text() );
-    mSettings->setValue("SystemName", ui->edtSystemName->text() );
+    mSettings->setValue("MachineName", ui->edtMachineName->text() );
 
     mSettings->setValue("System", ui->cboSystems->currentText() );
 
@@ -524,6 +510,7 @@ void MainWindow::on_cboConfigName_currentIndexChanged(int index)
     ui->edtMemSize->setText( mSettings->value("MemSize").toString() );
     ui->chkBootmenu->setChecked( mSettings->value("Bootmenu").toBool() );
     ui->cboAccel->setCurrentText( mSettings->value("Accel").toString() );
+    ui->edtAccelProp->setText( mSettings->value("AccelProp").toString() );
     ui->cboLanguage->setCurrentText( mSettings->value("Language").toString() );
 
     ui->edtSMPCpus->setText( mSettings->value("CPUs").toString() );
@@ -539,7 +526,7 @@ void MainWindow::on_cboConfigName_currentIndexChanged(int index)
 
     ui->edtCpuModel->setText( mSettings->value("CpuModel").toString() );
     ui->edtCpuProp->setText( mSettings->value("CpuModelProp").toString() );
-    ui->edtSystemName->setText( mSettings->value("SystemName").toString() );
+    ui->edtMachineName->setText( mSettings->value("MachineName").toString() );
 
     ui->cboSystems->setCurrentText( mSettings->value("System").toString() );
 
@@ -593,4 +580,19 @@ void MainWindow::on_actionStylsheet_triggered()
     }
 }
 
+void MainWindow::on_cmdStoreDir_clicked()
+{
+    QString dir = QFileDialog::getExistingDirectory(this, tr("Open Directory"),
+                                                    QDir::rootPath(),
+                                                    QFileDialog::ShowDirsOnly | QFileDialog::DontResolveSymlinks);
 
+    if ( !dir.isEmpty() ) {
+
+        ui->edtStoreDir->setText(dir);
+
+        this->fillCboSystems();
+
+        mSettings->setValue("QEmuStoreDir", dir);
+        mSettings->sync();
+    }
+}

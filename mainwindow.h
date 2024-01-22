@@ -57,12 +57,9 @@ private slots:
     void on_edtMemSize_textChanged(const QString &arg1);
     void on_edtSlots_textChanged(const QString &arg1);
     void on_edtMaxMem_textChanged(const QString &arg1);
-    void on_chkMemPreallocActive_stateChanged(int arg1);
-    void on_edtMemPath_textChanged(const QString &arg1);
 
     void on_tbuCreateImageFileName_clicked();
     void on_cmdCreateImage_clicked();
-
 
     void on_toolButton_clicked();
     void on_toolButton_2_clicked();
@@ -125,11 +122,17 @@ private slots:
 
     void on_edtCpuProp_textChanged(const QString &arg1);
 
+    void on_cmdStoreDir_clicked();
+
+    void on_edtAccelProp_textChanged(const QString &arg1);
+
+    void on_edtMachineName_textChanged(const QString &arg1);
+
 private:
+
     Ui::MainWindow *ui;
 
     QProcess       *mProcess;    
     QSettings      *mSettings;
-    QString        m_SettingsFile;
 };
 #endif // MAINWINDOW_H

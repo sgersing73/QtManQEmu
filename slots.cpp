@@ -1,10 +1,5 @@
 #include "mainwindow.h"
-#include <QString>
-
-void MainWindow::on_edtMemPath_textChanged(const QString &arg1)
-{
-    this->buildSystemParameter();
-}
+#include "ui_mainwindow.h"
 
 void MainWindow::on_edtSlots_textChanged(const QString &arg1)
 {
@@ -17,11 +12,6 @@ void MainWindow::on_edtMaxMem_textChanged(const QString &arg1)
 }
 
 void MainWindow::on_edtMemSize_textChanged(const QString &arg1)
-{
-    this->buildSystemParameter();
-}
-
-void MainWindow::on_chkMemPreallocActive_stateChanged(int arg1)
 {
     this->buildSystemParameter();
 }
@@ -116,7 +106,6 @@ void MainWindow::on_chkBootmenu_stateChanged(int arg1)
     this->buildSystemParameter();
 }
 
-
 void MainWindow::on_cboLanguage_currentTextChanged(const QString &arg1)
 {
     this->buildSystemParameter();
@@ -135,4 +124,35 @@ void MainWindow::on_edtSystemName_textChanged(const QString &arg1)
 void MainWindow::on_edtCpuProp_textChanged(const QString &arg1)
 {
     this->buildSystemParameter();
+}
+
+void MainWindow::on_edtAccelProp_textChanged(const QString &arg1)
+{
+    this->buildSystemParameter();
+}
+
+void MainWindow::on_edtMachineName_textChanged(const QString &arg1)
+{
+    this->buildSystemParameter();
+}
+
+void MainWindow::on_cmdStart_clicked()
+{
+    QStringList para ;
+
+    ui->edtOutput->clear();
+    ui->edtError->clear();
+
+    para << ui->edtSystemParam->text().split(" ")
+         << ui->edtDiskParam->text().split(" ")
+         << ui->edtCdromParam->text().split(" ")
+         << ui->edtFloppyParam->text().split(" ");
+
+    qDebug() << ui->edtProgramDir->text() + "/" + ui->cboSystems->currentText();
+
+    para.removeAll("");
+
+    qDebug() << para;
+
+    mProcess->start(ui->edtProgramDir->text() + "/" + ui->cboSystems->currentText(), para);
 }
