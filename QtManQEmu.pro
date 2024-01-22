@@ -1,10 +1,10 @@
+QMAKE_CXXFLAGS = -Wno-unused-parameter -Wno-attributes
+
 QT       += core gui network
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
 CONFIG += c++17
-
-QMAKE_CXXFLAGS_WARN_OFF -= -Wunused-parameter
 
 # You can make your code fail to compile if it uses deprecated APIs.
 # In order to do so, uncomment the following line.
@@ -12,10 +12,10 @@ QMAKE_CXXFLAGS_WARN_OFF -= -Wunused-parameter
 
 SOURCES += \
     main.cpp \
-    mainwindow.cpp
+    mainwindow.cpp \
+    slots.cpp
 
 HEADERS += \
-    ../build-QtManQEmu-Desktop_Qt_5_12_3_MinGW_32_bit-Debug/debug/moc_predefs.h \
     mainwindow.h
 
 FORMS += \
@@ -24,8 +24,7 @@ FORMS += \
 TRANSLATIONS += \
     QtManQEmu_de_DE.ts
 
-CONFIG += lrelease
-CONFIG += embed_translations
+CONFIG += lrelease embed_translations
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin

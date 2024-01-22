@@ -5,9 +5,15 @@ MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
 {
+    QDir dir;
+
     ui->setupUi(this);
 
-    mSettings = new QSettings("config.ini", QSettings::IniFormat);
+    QString AppDataPath = QStandardPaths::writableLocation(QStandardPaths::AppConfigLocation);
+    dir.mkpath(AppDataPath);
+    QString SettingsFile = AppDataPath + "/settings.ini";
+
+    mSettings = new QSettings(SettingsFile, QSettings::IniFormat);
 
     restoreGeometry(mSettings->value("geometry").toByteArray());
     restoreState(mSettings->value("windowState").toByteArray());
@@ -223,6 +229,9 @@ void MainWindow::buildSystemParameter() {
     if ( !ui->cboAccel->currentText().isEmpty() )
         para = para + " -accel " + ui->cboAccel->currentText();
 
+    if ( !ui->edtAccelProp->text().isEmpty() )
+        para = para + "," + ui->edtAccelProp->text();
+
     if ( !ui->edtSMPCpus->text().isEmpty() )
         para = para + " -smp cpus=" + ui->edtSMPCpus->text();
 
@@ -246,6 +255,15 @@ void MainWindow::buildSystemParameter() {
 
     if ( !ui->edtUUID->text().isEmpty() )
         para = para + " -uuid " + ui->edtUUID->text();
+
+    if ( !ui->edtCpuModel->text().isEmpty() )
+        para = para + " -cpu " + ui->edtCpuModel->text();
+
+    if ( !ui->edtCpuProp->text().isEmpty() )
+        para = para + "," + ui->edtCpuProp->text();
+
+    if ( !ui->edtSystemName->text().isEmpty() )
+        para = para + " -system " + ui->edtSystemName->text();
 
     if ( !ui->edtExtra->text().isEmpty() )
         para = para + " " + ui->edtExtra->text();
@@ -305,33 +323,6 @@ void MainWindow::buildFloppyParameter() {
     ui->edtFloppyParam->setText(para);
 }
 
-
-void MainWindow::on_edtSlots_textChanged(const QString &arg1)
-{
-    this->buildSystemParameter();
-}
-
-void MainWindow::on_edtMaxMem_textChanged(const QString &arg1)
-{
-    this->buildSystemParameter();
-}
-
-void MainWindow::on_edtMemSize_textChanged(const QString &arg1)
-{
-    this->buildSystemParameter();
-}
-
-void MainWindow::on_chkMemPreallocActive_stateChanged(int arg1)
-{
-    this->buildSystemParameter();
-}
-
-void MainWindow::on_edtMemPath_textChanged(const QString &arg1)
-{
-    this->buildSystemParameter();
-}
-
-
 void MainWindow::on_tbuCreateImageFileName_clicked()
 {
     QString selFilter="All files (*.*)";
@@ -342,7 +333,6 @@ void MainWindow::on_tbuCreateImageFileName_clicked()
         ui->edtCreateImageFileName->setText (fileName);
     }
 }
-
 
 void MainWindow::on_cmdCreateImage_clicked()
 {
@@ -370,19 +360,6 @@ void MainWindow::on_toolButton_clicked()
         }
     }
 }
-
-
-void MainWindow::on_edtDisk_0_textChanged(const QString &arg1)
-{
-    this->buildDiskParameter();
-}
-
-
-void MainWindow::on_edtDisk_1_textChanged(const QString &arg1)
-{
-    this->buildDiskParameter();
-}
-
 
 void MainWindow::on_edtDisk_2_textChanged(const QString &arg1)
 {
@@ -432,19 +409,6 @@ void MainWindow::on_toolButton_2_clicked()
     }
 }
 
-void MainWindow::on_edtCdrom_0_textChanged(const QString &arg1)
-{
-    this->buildCdromParameter();
-}
-
-
-void MainWindow::on_edtCdrom_1_textChanged(const QString &arg1)
-{
-    this->buildCdromParameter();
-}
-
-
-
 void MainWindow::on_toolButton_3_clicked()
 {
     QString image = QFileDialog::getOpenFileName(this, tr("Open Directory"), QDir::rootPath());
@@ -456,17 +420,6 @@ void MainWindow::on_toolButton_3_clicked()
         case 1:  ui->edtFloppy_1->setText(image);break;
         }
     }
-}
-
-void MainWindow::on_edtFloppy_0_textChanged(const QString &arg1)
-{
-    this->buildFloppyParameter();
-}
-
-
-void MainWindow::on_edtFloppy_1_textChanged(const QString &arg1)
-{
-    this->buildFloppyParameter();
 }
 
 void MainWindow::on_cboModulInfo_currentTextChanged(const QString &arg1)
@@ -488,24 +441,6 @@ void MainWindow::on_actionExit_triggered()
 {
     qApp->exit();
 }
-
-void MainWindow::on_chkBootmenu_stateChanged(int arg1)
-{
-    this->buildSystemParameter();
-}
-
-
-void MainWindow::on_cboLanguage_currentTextChanged(const QString &arg1)
-{
-     this->buildSystemParameter();
-}
-
-
-void MainWindow::on_cboAccel_currentTextChanged(const QString &arg1)
-{
-    this->buildSystemParameter();
-}
-
 
 void MainWindow::on_actionSave_triggered()
 {
@@ -551,6 +486,10 @@ void MainWindow::on_actionSave_triggered()
 
     mSettings->setValue("UUID", ui->edtUUID->text() );
     mSettings->setValue("Extra", ui->edtExtra->text() );
+
+    mSettings->setValue("CpuModel", ui->edtCpuModel->text() );
+    mSettings->setValue("CpuModelProp", ui->edtCpuProp->text() );
+    mSettings->setValue("SystemName", ui->edtSystemName->text() );
 
     mSettings->setValue("System", ui->cboSystems->currentText() );
 
@@ -598,6 +537,10 @@ void MainWindow::on_cboConfigName_currentIndexChanged(int index)
     ui->edtUUID->setText( mSettings->value("UUID").toString() );
     ui->edtExtra->setText( mSettings->value("Extra").toString() );
 
+    ui->edtCpuModel->setText( mSettings->value("CpuModel").toString() );
+    ui->edtCpuProp->setText( mSettings->value("CpuModelProp").toString() );
+    ui->edtSystemName->setText( mSettings->value("SystemName").toString() );
+
     ui->cboSystems->setCurrentText( mSettings->value("System").toString() );
 
     mSettings->endGroup();
@@ -620,59 +563,9 @@ void MainWindow::on_actionDelete_triggered()
     }
 }
 
-void MainWindow::on_cboSystems_currentTextChanged(const QString &arg1)
-{
-    this->on_cmdVersion_clicked();
-}
-
-void MainWindow::on_edtSMPCpus_textChanged(const QString &arg1)
-{
-    this->buildSystemParameter();
-}
-
-void MainWindow::on_edtSMPMaxCpus_textChanged(const QString &arg1)
-{
-    this->buildSystemParameter();
-}
-
-void MainWindow::on_edtSMPSockets_textChanged(const QString &arg1)
-{
-    this->buildSystemParameter();
-}
-
-void MainWindow::on_edtSMPDies_textChanged(const QString &arg1)
-{
-    this->buildSystemParameter();
-}
-
-void MainWindow::on_edtSMPClusters_textChanged(const QString &arg1)
-{
-    this->buildSystemParameter();
-}
-
-void MainWindow::on_edtSMPCores_textChanged(const QString &arg1)
-{
-    this->buildSystemParameter();
-}
-
-void MainWindow::on_edtSMPThreads_textChanged(const QString &arg1)
-{
-    this->buildSystemParameter();
-}
-
 void MainWindow::on_cmdUUID_clicked()
 {
     ui->edtUUID->setText ( QUuid::createUuid().toString().remove("{").remove("}") ) ;
-}
-
-void MainWindow::on_edtUUID_textChanged(const QString &arg1)
-{
-   this->buildSystemParameter();
-}
-
-void MainWindow::on_edtExtra_textChanged(const QString &arg1)
-{
-   this->buildSystemParameter();
 }
 
 void MainWindow::on_actionStylsheet_triggered()
@@ -699,3 +592,5 @@ void MainWindow::on_actionStylsheet_triggered()
         mSettings->sync();
     }
 }
+
+

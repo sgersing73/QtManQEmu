@@ -11,6 +11,8 @@
 #include <QUuid>
 #include <QHostInfo>
 #include <QStorageInfo>
+#include <QDir>
+#include <QStandardPaths>
 
 QT_BEGIN_NAMESPACE
 namespace Ui {
@@ -117,10 +119,17 @@ private slots:
 
     void on_actionStylsheet_triggered();
 
+    void on_edtCpuModel_textChanged(const QString &arg1);
+
+    void on_edtSystemName_textChanged(const QString &arg1);
+
+    void on_edtCpuProp_textChanged(const QString &arg1);
+
 private:
     Ui::MainWindow *ui;
 
     QProcess       *mProcess;    
     QSettings      *mSettings;
+    QString        m_SettingsFile;
 };
 #endif // MAINWINDOW_H
